@@ -47,7 +47,7 @@ class MsgCollector:
 
         self.task = asyncio.create_task(pull())
 
-    async def _stop(self):
+    async def _stop(self) -> None:
         try:
             self.task.cancel()
             await self.task
@@ -57,7 +57,7 @@ class MsgCollector:
 
 async def main():
     nc = await nats.connect()
-    logging.info(f'Connected to {nc.connected_url.netloc} ')
+    logging.info(f'Connected to {nc.connected_url.netloc}')
     collector = MsgCollector(nc)
     await collector.subscribe('test.*')
     await nc.publish(subject='test.foo', payload=b'foo')
