@@ -42,6 +42,7 @@ class MsgCollector:
                     logging.info(f'Received {msg}')
                     self.msgs.append(msg)
                 except nats.errors.TimeoutError:
+                    # Can be removed when https://github.com/nats-io/nats.py/pull/378 is merged and released
                     raise asyncio.CancelledError
 
         self.task = asyncio.create_task(pull())
@@ -57,16 +58,16 @@ class MsgCollector:
 async def main():
     nc = await nats.connect()
     logging.info(f'Connected to {nc.connected_url.netloc} ')
-    status = MsgCollector(nc)
-    await status.subscribe('test.*')
+    collector = MsgCollector(nc)
+    await collector.subscribe('test.*')
     await nc.publish(subject='test.foo', payload=b'foo')
     logging.info(f'Published on test.foo')
     await nc.publish(subject='test.bar', payload=b'bar')
     logging.info(f'Published on test.bar')
     await asyncio.sleep(1)
-    await status.unsubscribe()
+    await collector.unsubscribe()
     await nc.close()
-    print([(msg.data.decode()) for msg in status.msgs])
+    print([(msg.data.decode()) for msg in collector.msgs])
 
 
 if __name__ == '__main__':
